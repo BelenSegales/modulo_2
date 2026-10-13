@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { CardProducto } from "./componentes/CardProducto";
 import "./App.css";
+import { CardIA } from "./componentes/CardIA";
 
 interface Producto1 {
   nombre: string;
@@ -41,7 +42,6 @@ function App() {
         <CardProducto nombre="Naranjas" precio={20} stock={0}></CardProducto>
         <CardProducto nombre="Uvas" precio={30} stock={5}></CardProducto>
       </div>
-
       <div>
         {Productos.map((p) => (
           <CardProducto
@@ -51,7 +51,6 @@ function App() {
           ></CardProducto>
         ))}
       </div>
-
       <div>
         <h1>USO DE ESTADOS BASICOS</h1>
         <button
@@ -70,6 +69,10 @@ function App() {
             ></CardProducto>
           ))}
         </div>
+      </div>
+      //CODIGO GENERADO CON IA
+      <div className="px-10 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-space-md">
+        <CardIA nombre="Labial" precio={25} stock={10}></CardIA>
       </div>
     </div>
   );
