@@ -5,10 +5,10 @@ import { FiltrosCatalogo } from "../componentes/FiltrosCatalogo";
 import { FormularioEdicionProducto } from "../componentes/FormularioEdicionProducto";
 import { FormularioProducto } from "../componentes/FormularioProducto";
 import { productosService } from "../services/productos";
+import { useAuthStore } from "../store/useAuthStore"; // <-- no olviden importar el store !! ya no tenemos el service de auth
 import type { Producto } from "../types/producto";
 
 const CATEGORIAS_BASE = ["Todas", "Electrónica", "Ropa", "Hogar"];
-
 type Orden = "recientes" | "nombre" | "stock";
 
 const obtenerMensajeError = (error: unknown, mensajePorDefecto: string) => {
@@ -16,20 +16,17 @@ const obtenerMensajeError = (error: unknown, mensajePorDefecto: string) => {
     if (error.response?.status === 401 || error.response?.status === 403) {
       return "Solo accesso al admin! ";
     }
-
     const detalle = error.response?.data?.detail;
     if (typeof detalle === "string") return detalle;
   }
-
   return mensajePorDefecto;
 };
 
-interface PaginaCatalogoProps {
-  esAdmin?: boolean;
-}
+export function PaginaCatalogo() {
+  // checamos si es admin directamente del store global (eliminamos a la prop esAdmin que teniamos antes)
+  const esAdmin = useAuthStore((s) => s.esAdmin());
 
-export function PaginaCatalogo({ esAdmin = false }: PaginaCatalogoProps) {
-  // Este estado es la fuente de verdad de todas las tarjetas del catálogo.
+  // estado local de productos y filtros
   const [productos, setProductos] = useState<Producto[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState("");
@@ -42,7 +39,9 @@ export function PaginaCatalogo({ esAdmin = false }: PaginaCatalogoProps) {
   const [nuevoPrecio, setNuevoPrecio] = useState("");
   const [nuevaDescripcion, setNuevaDescripcion] = useState("");
   const [nuevaImagenUrl, setNuevaImagenUrl] = useState("");
-  const [productoEditando, setProductoEditando] = useState<Producto | null>(null);
+  const [productoEditando, setProductoEditando] = useState<Producto | null>(
+    null,
+  );
 
   useEffect(() => {
     const cargarProductos = async () => {
@@ -55,11 +54,8 @@ export function PaginaCatalogo({ esAdmin = false }: PaginaCatalogoProps) {
         setCargando(false);
       }
     };
-
     void cargarProductos();
   }, []);
-
-  //  filtrado y ordenamiento se calculan directamente en cada render
 
   const filtrados = productos
     .filter((producto) => {
@@ -68,7 +64,6 @@ export function PaginaCatalogo({ esAdmin = false }: PaginaCatalogoProps) {
         .includes(query.toLowerCase().trim());
       const coincideCategoria =
         categoria === "Todas" || producto.categoria === categoria;
-
       return coincideNombre && coincideCategoria;
     })
     .sort((a, b) => {
@@ -77,21 +72,13 @@ export function PaginaCatalogo({ esAdmin = false }: PaginaCatalogoProps) {
       return b.id - a.id;
     });
 
-  const productosDisponibles = productos.filter(
-    (producto) => producto.stock > 0,
-  ).length;
-  const stockTotal = productos.reduce(
-    (total, producto) => total + producto.stock,
-    0,
-  );
+  const productosDisponibles = productos.filter((p) => p.stock > 0).length;
+  const stockTotal = productos.reduce((total, p) => total + p.stock, 0);
 
-  // onSubmit controla el formulario y evita que el navegador recargue la página.
   const handleAgregarProducto = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
     const precio = Number(nuevoPrecio);
     if (!nuevoNombre.trim() || !Number.isFinite(precio) || precio <= 0) return;
-
     try {
       setAccionando(-1);
       setError("");
@@ -115,45 +102,19 @@ export function PaginaCatalogo({ esAdmin = false }: PaginaCatalogoProps) {
     }
   };
 
-  // Estos inputs son controlados: React guarda y actualiza su valor mediante onChange.
-  const handleNombreChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setNuevoNombre(e.target.value);
-  };
-
-  const handlePrecioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setNuevoPrecio(e.target.value);
-  };
-
-  const handleQueryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setQuery(e.target.value);
-  };
-
-  const handleCategoriaNuevaChange = (
-    e: React.ChangeEvent<HTMLSelectElement>,
-  ) => {
-    setNuevaCategoria(e.target.value);
-  };
-
-  const handleCategoriaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setCategoria(e.target.value);
-  };
-
-  const handleOrdenChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setOrden(e.target.value as Orden);
-  };
-
   const handleEditarProducto = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!productoEditando) return;
     const productoAnterior = productos.find(
-      (producto) => producto.id === productoEditando.id,
+      (p) => p.id === productoEditando.id,
     );
     if (
       !productoAnterior ||
       !productoEditando.nombre.trim() ||
       productoEditando.precio <= 0 ||
       productoEditando.stock < 0
-    ) return;
+    )
+      return;
     setAccionando(productoEditando.id);
     try {
       const productoActualizado = await productosService.update(
@@ -161,15 +122,13 @@ export function PaginaCatalogo({ esAdmin = false }: PaginaCatalogoProps) {
         productoEditando,
       );
       setProductos((prev) =>
-        prev.map((producto) =>
-          producto.id === productoEditando.id ? productoActualizado : producto,
+        prev.map((p) =>
+          p.id === productoEditando.id ? productoActualizado : p,
         ),
       );
     } catch (err) {
       setProductos((prev) =>
-        prev.map((producto) =>
-          producto.id === productoEditando.id ? productoAnterior : producto,
-        ),
+        prev.map((p) => (p.id === productoEditando.id ? productoAnterior : p)),
       );
       setError(obtenerMensajeError(err, "No se pudo editar el producto."));
     } finally {
@@ -180,8 +139,7 @@ export function PaginaCatalogo({ esAdmin = false }: PaginaCatalogoProps) {
 
   const handleEliminar = async (id: number) => {
     const productosAnteriores = productos;
-    setProductos((prev) => prev.filter((producto) => producto.id !== id));
-
+    setProductos((prev) => prev.filter((p) => p.id !== id));
     try {
       setAccionando(id);
       await productosService.delete(id);
@@ -195,17 +153,14 @@ export function PaginaCatalogo({ esAdmin = false }: PaginaCatalogoProps) {
 
   const categorias = [
     ...CATEGORIAS_BASE,
-    ...Array.from(
-      new Set(productos.map((producto) => producto.categoria).filter(Boolean)),
-    ),
+    ...Array.from(new Set(productos.map((p) => p.categoria).filter(Boolean))),
   ].filter((opcion, indice, opciones) => opciones.indexOf(opcion) === indice);
 
   return (
     <main className="page">
       <header className="hero">
-        <p className="kicker">GUÍA DE EVENTOS EN REACT</p>
         <h1>Catálogo de productos</h1>
-        <p>Catálogo conectado a una API con Axios y operaciones optimistas.</p>
+        <p>Catálogo conectado a una API</p>
       </header>
 
       <section className="stats" aria-label="Resumen del catálogo">
@@ -224,31 +179,28 @@ export function PaginaCatalogo({ esAdmin = false }: PaginaCatalogoProps) {
       </section>
 
       {esAdmin && (
-      <section className="panel" aria-labelledby="add-product-title">
-        <div className="section-title">
-          <div>
-            <p className="kicker">EVENTO ONSUBMIT</p>
-            <h2 id="add-product-title">Agregar producto</h2>
+        <section className="panel" aria-labelledby="add-product-title">
+          <div className="section-title">
+            <div>
+              <h2 id="add-product-title">Agregar producto</h2>
+            </div>
           </div>
-          <p>El formulario usa valores controlados.</p>
-        </div>
-
-        <FormularioProducto
-          categorias={categorias}
-          nombre={nuevoNombre}
-          categoria={nuevaCategoria}
-          precio={nuevoPrecio}
-          descripcion={nuevaDescripcion}
-          imagenUrl={nuevaImagenUrl}
-          cargando={accionando === -1}
-          onSubmit={(e) => void handleAgregarProducto(e)}
-          onNombreChange={handleNombreChange}
-          onCategoriaChange={handleCategoriaNuevaChange}
-          onPrecioChange={handlePrecioChange}
-          onDescripcionChange={(e) => setNuevaDescripcion(e.target.value)}
-          onImagenChange={(e) => setNuevaImagenUrl(e.target.value)}
-        />
-      </section>
+          <FormularioProducto
+            categorias={categorias}
+            nombre={nuevoNombre}
+            categoria={nuevaCategoria}
+            precio={nuevoPrecio}
+            descripcion={nuevaDescripcion}
+            imagenUrl={nuevaImagenUrl}
+            cargando={accionando === -1}
+            onSubmit={(e) => void handleAgregarProducto(e)}
+            onNombreChange={(e) => setNuevoNombre(e.target.value)}
+            onCategoriaChange={(e) => setNuevaCategoria(e.target.value)}
+            onPrecioChange={(e) => setNuevoPrecio(e.target.value)}
+            onDescripcionChange={(e) => setNuevaDescripcion(e.target.value)}
+            onImagenChange={(e) => setNuevaImagenUrl(e.target.value)}
+          />
+        </section>
       )}
 
       {esAdmin && productoEditando && (
@@ -264,7 +216,7 @@ export function PaginaCatalogo({ esAdmin = false }: PaginaCatalogoProps) {
       <section className="panel" aria-labelledby="products-title">
         <div className="section-title">
           <div>
-            <p className="kicker">ESTADO Y EVENTOS</p>
+            <p className="kicker">CATÁLOGO</p>
             <h2 id="products-title">Tus productos</h2>
           </div>
           <p>
@@ -277,9 +229,9 @@ export function PaginaCatalogo({ esAdmin = false }: PaginaCatalogoProps) {
           query={query}
           categoria={categoria}
           orden={orden}
-          onQueryChange={handleQueryChange}
-          onCategoriaChange={handleCategoriaChange}
-          onOrdenChange={handleOrdenChange}
+          onQueryChange={(e) => setQuery(e.target.value)}
+          onCategoriaChange={(e) => setCategoria(e.target.value)}
+          onOrdenChange={(e) => setOrden(e.target.value as Orden)}
         />
 
         {error && <p className="feedback error">{error}</p>}

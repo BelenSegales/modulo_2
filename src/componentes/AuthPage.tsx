@@ -1,9 +1,9 @@
 import { useState } from "react";
 import axios from "axios";
 import { authService } from "../services/auth";
+import { useAuthStore } from "../store/useAuthStore";
 
 interface AuthPageProps {
-  onLogin: () => void;
   onCancel?: () => void;
 }
 
@@ -15,7 +15,8 @@ const obtenerErrorAuth = (error: unknown, mensaje: string) => {
   return mensaje;
 };
 
-export function AuthPage({ onLogin, onCancel }: AuthPageProps) {
+export function AuthPage({ onCancel }: AuthPageProps) {
+  const loginStore = useAuthStore((s) => s.login);
   const [modo, setModo] = useState<"Login" | "registro">("Login");
   const [nombre, setNombre] = useState("");
   const [email, setEmail] = useState("");
@@ -44,9 +45,8 @@ export function AuthPage({ onLogin, onCancel }: AuthPageProps) {
         setNombre("");
         setpasword("");
       } else {
-        //POST para iniciar sesion
-        await authService.login({ email, password });
-        onLogin();
+        //POST para iniciar sesion, llamamos directamente al store donde se guarda el token
+        await loginStore({ email, password });
       }
     } catch (err) {
       setError(

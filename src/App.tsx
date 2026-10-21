@@ -1,51 +1,31 @@
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import axios from "axios";
 import { AuthPage } from "./componentes/AuthPage";
 import { PaginaCatalogo } from "./pages/PaginaCatalogo";
 import { authService } from "./services/auth";
+import { useAuthStore } from "./store/useAuthStore";
 import "./App.css";
 
 function App() {
-  const [autenticado, setAutenticado] = useState(
-    () => Boolean(localStorage.getItem("token")),
-  );
-  const [verificandoSesion, setVerificandoSesion] = useState(autenticado);
-  const [usuarioNombre, setUsuarioNombre] = useState(
-    () => localStorage.getItem("usuarioNombre") ?? "",
-  );
-  const [usuarioRol, setUsuarioRol] = useState(
-    () => localStorage.getItem("usuarioRol") ?? "",
-  );
-  const [mostrarAuth, setMostrarAuth] = useState(false);
+  const autenticado = useAuthStore((s) => s.autenticado);
+  const verificandoSesion = useAuthStore((s) => s.verificandoSesion);
+  const usuarioNombre = useAuthStore((s) => s.usuarioNombre);
+  const usuarioRol = useAuthStore((s) => s.usuarioRol);
+  const mostrarAuth = useAuthStore((s) => s.mostrarAuth);
+  const verificarSesion = useAuthStore((s) => s.verificarSesion);
+  const logout = useAuthStore((s) => s.logout);
+  const abrirAuth = useAuthStore((s) => s.abrirAuth);
+  const cerrarAuth = useAuthStore((s) => s.cerrarAuth);
 
   useEffect(() => {
-    if (!autenticado) {
-      return;
-    }
-
-    const verificarSesion = async () => {
-      try {
-        const usuario = await authService.me();
-        setUsuarioNombre(usuario.nombre);
-        setUsuarioRol(usuario.rol);
-      } catch (error) {
-        if (axios.isAxiosError(error) && error.response?.status === 401) {
-          authService.logout();
-          setAutenticado(false);
-        }
-      } finally {
-        setVerificandoSesion(false);
-      }
-    };
-
     void verificarSesion();
-  }, [autenticado]);
+  }, [verificarSesion]);
 
   if (verificandoSesion) {
     return (
       <>
         <p className="empty app-loading">Verificando sesión...</p>
-        <PaginaCatalogo esAdmin={false} />
+        <PaginaCatalogo />
       </>
     );
   }
@@ -59,14 +39,7 @@ function App() {
               Sesión: <strong>{usuarioNombre || "Usuario"}</strong>
               {usuarioRol && <small> ({usuarioRol})</small>}
             </span>
-            <button
-              type="button"
-              className="button secondary"
-              onClick={() => {
-                authService.logout();
-                setAutenticado(false);
-              }}
-            >
+            <button type="button" className="button secondary" onClick={logout}>
               Cerrar sesión
             </button>
           </>
@@ -76,25 +49,15 @@ function App() {
             <button
               type="button"
               className="button secondary"
-              onClick={() => setMostrarAuth(true)}
+              onClick={abrirAuth}
             >
               Iniciar sesión
             </button>
           </>
         )}
       </header>
-      <PaginaCatalogo
-        esAdmin={autenticado && usuarioRol.toLowerCase() === "admin"}
-      />
-      {mostrarAuth && !autenticado && (
-        <AuthPage
-          onLogin={() => {
-            setMostrarAuth(false);
-            setAutenticado(true);
-          }}
-          onCancel={() => setMostrarAuth(false)}
-        />
-      )}
+      <PaginaCatalogo />
+      {mostrarAuth && !autenticado && <AuthPage onCancel={cerrarAuth} />}
     </>
   );
 }
