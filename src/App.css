@@ -4,6 +4,119 @@
   padding: 32px 0 56px;
 }
 
+.auth-page {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(32, 32, 45, 0.62);
+  backdrop-filter: blur(3px);
+}
+
+.auth-card {
+  position: relative;
+  width: min(100%, 440px);
+  padding: 32px;
+  background: white;
+  border: 1px solid #e5e3ee;
+  border-radius: 18px;
+  box-shadow: 0 18px 50px rgba(64, 58, 114, 0.1);
+}
+
+.auth-close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  padding: 4px 0;
+  color: #7567d6;
+  background: transparent;
+  border: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.auth-card h1 {
+  margin-top: 8px;
+  color: #2e2b43;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 2rem;
+}
+
+.auth-subtitle {
+  margin-top: 8px;
+  color: #77738a;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.auth-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-top: 24px;
+  padding: 4px;
+  background: #f1eff8;
+  border-radius: 9px;
+}
+
+.auth-tabs button {
+  padding: 10px;
+  color: #77738a;
+  background: transparent;
+  border: 0;
+  border-radius: 7px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.auth-tabs button.active {
+  color: #4e477b;
+  background: white;
+  box-shadow: 0 2px 5px rgba(64, 58, 114, 0.1);
+}
+
+.auth-form {
+  display: grid;
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.auth-submit {
+  width: 100%;
+  margin-top: 4px;
+}
+
+.feedback.success {
+  color: #277c5e;
+  background: #e0f5ed;
+}
+
+.session-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: min(1080px, calc(100% - 32px));
+  margin: 20px auto 0;
+  padding: 12px 16px;
+  color: #646074;
+  background: white;
+  border: 1px solid #e5e3ee;
+  border-radius: 10px;
+  font-size: 0.82rem;
+}
+
+.session-bar small {
+  color: #8a869c;
+}
+
+.app-loading {
+  width: min(1080px, calc(100% - 32px));
+  margin: 32px auto;
+}
+
 .hero {
   padding: 40px;
   color: white;
@@ -101,7 +214,15 @@
 }
 
 .form {
-  grid-template-columns: 2fr 1.3fr 120px auto;
+  grid-template-columns: 2fr 1.3fr 120px 2fr 2fr auto;
+  align-items: end;
+}
+
+.edit-form {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 20px;
   align-items: end;
 }
 
@@ -155,7 +276,7 @@ select:focus {
 
 .cards {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px;
   margin-top: 20px;
 }
@@ -173,6 +294,25 @@ select:focus {
   background: #e7e4ff;
   font-size: 0.75rem;
   font-weight: 700;
+}
+
+.card-image,
+.card-image-placeholder {
+  width: 100%;
+  height: 150px;
+}
+
+.card-image {
+  display: block;
+  object-fit: cover;
+}
+
+.card-image-placeholder {
+  display: grid;
+  place-items: center;
+  color: #8a869c;
+  background: #f1eff8;
+  font-size: 0.8rem;
 }
 
 .card-ropa .card-color {
@@ -207,6 +347,14 @@ select:focus {
   white-space: nowrap;
 }
 
+.card-description {
+  min-height: 36px;
+  margin-top: 12px;
+  color: #77738a;
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
 .label {
   color: #aaa7b7;
   font-size: 0.65rem;
@@ -233,6 +381,10 @@ select:focus {
 .card-actions .danger {
   color: #ad5869;
   background: transparent;
+}
+
+.buy-button {
+  margin-left: auto;
 }
 
 .card-message {
@@ -269,6 +421,23 @@ select:focus {
   border-radius: 10px;
 }
 
+.feedback {
+  margin-top: 16px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+}
+
+.feedback.error {
+  color: #9d4356;
+  background: #ffeaed;
+}
+
+.button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
 @media (max-width: 720px) {
   .page {
     width: min(100% - 20px, 560px);
@@ -280,6 +449,7 @@ select:focus {
   }
 
   .form,
+  .edit-form,
   .filters,
   .cards {
     grid-template-columns: 1fr;

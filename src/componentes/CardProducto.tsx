@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { BadgeStock } from "./BadgeStock";
 
 interface CardProductoProps {
@@ -5,8 +6,12 @@ interface CardProductoProps {
   categoria: string;
   precio: number;
   stock: number;
-  onReponer: () => void;
+  descripcion: string;
+  imagenUrl: string | null;
+  esAdmin: boolean;
+  onEditar: () => void;
   onEliminar: () => void;
+  accionesDeshabilitadas?: boolean;
 }
 
 export function CardProducto({
@@ -14,11 +19,27 @@ export function CardProducto({
   categoria,
   precio,
   stock,
-  onReponer,
+  descripcion,
+  imagenUrl,
+  esAdmin,
+  onEditar,
   onEliminar,
+  accionesDeshabilitadas = false,
 }: CardProductoProps) {
+  const [imagenDisponible, setImagenDisponible] = useState(Boolean(imagenUrl));
+
   return (
     <article className={`card card-${categoria.toLowerCase()}`}>
+      {imagenUrl && imagenDisponible ? (
+        <img
+          className="card-image"
+          src={imagenUrl}
+          alt={`Imagen de ${nombre}`}
+          onError={() => setImagenDisponible(false)}
+        />
+      ) : (
+        <div className="card-image-placeholder">Sin imagen</div>
+      )}
       <div className="card-color">
         <span>{categoria}</span>
       </div>
@@ -32,16 +53,34 @@ export function CardProducto({
           <strong>Bs {precio}</strong>
         </div>
 
+        {descripcion && <p className="card-description">{descripcion}</p>}
+
         <div className="card-actions">
           <BadgeStock stock={stock} />
-
-          {/* onClick recibe una función del padre con el id del producto. */}
-          <button type="button" onClick={onReponer} className="button secondary">
-            +10 stock
-          </button>
-          <button type="button" onClick={onEliminar} className="button danger">
-            Eliminar
-          </button>
+          {esAdmin ? (
+            <>
+              <button
+                type="button"
+                onClick={onEditar}
+                className="button secondary"
+                disabled={accionesDeshabilitadas}
+              >
+                {accionesDeshabilitadas ? "Guardando..." : "Editar"}
+              </button>
+              <button
+                type="button"
+                onClick={onEliminar}
+                className="button danger"
+                disabled={accionesDeshabilitadas}
+              >
+                Eliminar
+              </button>
+            </>
+          ) : (
+            <button type="button" className="button primary buy-button">
+              Comprar
+            </button>
+          )}
         </div>
 
         {stock === 0 && (
