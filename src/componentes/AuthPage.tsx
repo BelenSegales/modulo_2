@@ -16,15 +16,15 @@ const obtenerErrorAuth = (error: unknown, mensaje: string) => {
 };
 
 export function AuthPage({ onLogin, onCancel }: AuthPageProps) {
-  const [modo, setModo] = useState<"login" | "registro">("login");
+  const [modo, setModo] = useState<"Login" | "registro">("Login");
   const [nombre, setNombre] = useState("");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [password, setpasword] = useState("");
   const [error, setError] = useState("");
   const [mensaje, setMensaje] = useState("");
   const [cargando, setCargando] = useState(false);
 
-  const cambiarModo = (nuevoModo: "login" | "registro") => {
+  const cambiarModo = (nuevoModo: "Login" | "registro") => {
     setModo(nuevoModo);
     setError("");
     setMensaje("");
@@ -35,15 +35,16 @@ export function AuthPage({ onLogin, onCancel }: AuthPageProps) {
     setCargando(true);
     setError("");
     setMensaje("");
-
     try {
       if (modo === "registro") {
+        //POST para registrar
         await authService.register({ nombre, email, password });
-        setMensaje("Registro exitoso. Ahora inicia sesión.");
-        setModo("login");
+        setMensaje("Registro completo, puedes iniciar sesión");
+        setModo("Login");
         setNombre("");
-        setPassword("");
+        setpasword("");
       } else {
+        //POST para iniciar sesion
         await authService.login({ email, password });
         onLogin();
       }
@@ -52,8 +53,8 @@ export function AuthPage({ onLogin, onCancel }: AuthPageProps) {
         obtenerErrorAuth(
           err,
           modo === "registro"
-            ? "No se pudo completar el registro."
-            : "Email o contraseña incorrectos.",
+            ? "No se pudo completar el registro"
+            : "Email o contraseña invalidos",
         ),
       );
     } finally {
@@ -64,26 +65,31 @@ export function AuthPage({ onLogin, onCancel }: AuthPageProps) {
   return (
     <main className="auth-page" role="dialog" aria-modal="true">
       <section className="auth-card">
+        {/* Botón opcional para cerrar o regresar */}
         {onCancel && (
           <button type="button" className="auth-close" onClick={onCancel}>
             Volver al catálogo
           </button>
         )}
+
         <p className="kicker">TIENDA ONLINE</p>
-        <h1>{modo === "login" ? "Iniciar sesión" : "Crear cuenta"}</h1>
+        <h1>{modo === "Login" ? "Iniciar Sesión" : "Crear cuenta"}</h1>
         <p className="auth-subtitle">
-          {modo === "login"
-            ? "Accede para administrar productos y probar las mutaciones."
-            : "Regístrate para comenzar a utilizar la tienda."}
+          {modo === "Login"
+            ? "Accede a tu cuenta para ver mas información"
+            : "Registrate para realizar tus compras"}
         </p>
+
+        {/* Pestañas para alternar entre Login y Registro */}
         <div className="auth-tabs" role="tablist" aria-label="Autenticación">
           <button
             type="button"
-            className={modo === "login" ? "active" : ""}
-            onClick={() => cambiarModo("login")}
+            className={modo === "Login" ? "active" : ""}
+            onClick={() => cambiarModo("Login")}
           >
             Iniciar sesión
           </button>
+
           <button
             type="button"
             className={modo === "registro" ? "active" : ""}
@@ -92,46 +98,55 @@ export function AuthPage({ onLogin, onCancel }: AuthPageProps) {
             Registrarse
           </button>
         </div>
+
+        {/* Formulario principal */}
         <form className="auth-form" onSubmit={(e) => void handleSubmit(e)}>
+          {/* El campo Nombre solo se muestra en modo Registro */}
+
           {modo === "registro" && (
             <label>
               Nombre
               <input
                 required
                 value={nombre}
+                placeholder="Ingresa tu nombre"
                 onChange={(e) => setNombre(e.target.value)}
-                placeholder="Tu nombre"
-              />
+              ></input>
             </label>
           )}
+
           <label>
             Email
             <input
               required
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
               placeholder="correo@ejemplo.com"
+              onChange={(e) => setEmail(e.target.value)}
             />
           </label>
+
           <label>
             Contraseña
             <input
               required
               minLength={6}
               type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
               placeholder="Mínimo 6 caracteres"
+              onChange={(e) => setpasword(e.target.value)}
             />
           </label>
-          {error && <p className="feedback error">{error}</p>}
-          {mensaje && <p className="feedback success">{mensaje}</p>}
+
+          {/* Mensajes de error o éxito */}
+
+          {error && <p className="feedback success">{mensaje}</p>}
+          {mensaje && <p className="feedback success">{mensaje} </p>}
+
           <button className="button primary auth-submit" disabled={cargando}>
             {cargando
               ? "Procesando..."
-              : modo === "login"
-                ? "Entrar"
+              : modo === "Login"
+                ? "Ingresar"
                 : "Crear cuenta"}
           </button>
         </form>
