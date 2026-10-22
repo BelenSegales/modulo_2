@@ -7,6 +7,7 @@ import { FormularioProducto } from "../componentes/FormularioProducto";
 import { productosService } from "../services/productos";
 import { useAuthStore } from "../store/useAuthStore"; // <-- no olviden importar el store !! ya no tenemos el service de auth
 import type { Producto } from "../types/producto";
+import { useDebounce } from "../hooks/useDebounce";
 
 const CATEGORIAS_BASE = ["Todas", "Electrónica", "Ropa", "Hogar"];
 type Orden = "recientes" | "nombre" | "stock";
@@ -31,7 +32,11 @@ export function PaginaCatalogo() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState("");
   const [accionando, setAccionando] = useState<number | null>(null);
+
+  //estados de la busqueda
   const [query, setQuery] = useState("");
+  const queryDebounced = useDebounce(query, 3000);
+
   const [categoria, setCategoria] = useState("Todas");
   const [orden, setOrden] = useState<Orden>("recientes");
   const [nuevoNombre, setNuevoNombre] = useState("");
@@ -61,7 +66,7 @@ export function PaginaCatalogo() {
     .filter((producto) => {
       const coincideNombre = producto.nombre
         .toLowerCase()
-        .includes(query.toLowerCase().trim());
+        .includes(queryDebounced.toLowerCase().trim()); // filtrando el valor con pausa
       const coincideCategoria =
         categoria === "Todas" || producto.categoria === categoria;
       return coincideNombre && coincideCategoria;
