@@ -8,6 +8,7 @@ import { productosService } from "../services/productos";
 import { useAuthStore } from "../store/useAuthStore"; // <-- no olviden importar el store !! ya no tenemos el service de auth
 import type { Producto } from "../types/producto";
 import { useDebounce } from "../hooks/useDebounce";
+import { useApi } from "../hooks/useApi";
 
 const CATEGORIAS_BASE = ["Todas", "Electrónica", "Ropa", "Hogar"];
 type Orden = "recientes" | "nombre" | "stock";
@@ -28,10 +29,23 @@ export function PaginaCatalogo() {
   const esAdmin = useAuthStore((s) => s.esAdmin());
 
   // estado local de productos y filtros
-  const [productos, setProductos] = useState<Producto[]>([]);
-  const [cargando, setCargando] = useState(true);
-  const [error, setError] = useState("");
+  // aqui vamos hacer uso de USEAPI con el ejemplo de productos
+
+  //  const [productos, setProductos] = useState<Producto[]>([]);
+  //  const [cargando, setCargando] = useState(true);
+  //  const [error, setError] = useState("");
   const [accionando, setAccionando] = useState<number | null>(null);
+
+  const {
+    data: productoData,
+    cargando,
+    error: errorApi,
+    recargar,
+  } = useApi(() => productosService.getAll(categoria));
+
+  const productos = productoData ?? [];
+  const [errorLocal, setErrorLocal] = useState("");
+  const error = errorLocal || errorApi;
 
   //estados de la busqueda
   const [query, setQuery] = useState("");
@@ -48,7 +62,10 @@ export function PaginaCatalogo() {
     null,
   );
 
-  useEffect(() => {
+  // al hacer uso del USEAPI podemos borrar el use effect que tenemos
+  // Por que ya no lo usamos? porque el hook useApi se encarga de ejecutar la peticion y reaccionar a cambios o incluso usar el recargar cuando creemos editemos y eliminesmos
+
+  /*useEffect(() => {
     const cargarProductos = async () => {
       try {
         setError("");
@@ -60,7 +77,7 @@ export function PaginaCatalogo() {
       }
     };
     void cargarProductos();
-  }, []);
+  }, []);*/
 
   const filtrados = productos
     .filter((producto) => {
@@ -86,8 +103,9 @@ export function PaginaCatalogo() {
     if (!nuevoNombre.trim() || !Number.isFinite(precio) || precio <= 0) return;
     try {
       setAccionando(-1);
-      setError("");
-      const nuevoProducto = await productosService.create({
+
+      // Creamos el producto en la API
+      await productosService.create({
         nombre: nuevoNombre.trim(),
         categoria: nuevaCategoria,
         precio,
@@ -95,13 +113,18 @@ export function PaginaCatalogo() {
         descripcion: nuevaDescripcion.trim(),
         imagenUrl: nuevaImagenUrl.trim(),
       });
-      setProductos((prev) => [...prev, nuevoProducto]);
+
+      // llamamos a recargar()desde el useApi para actualizar la lista automáticamente
+      recargar();
+
+      // lmpiamos el formulario
       setNuevoNombre("");
       setNuevoPrecio("");
       setNuevaDescripcion("");
       setNuevaImagenUrl("");
     } catch (err) {
-      setError(obtenerMensajeError(err, "No se pudo crear el producto."));
+      // podemos mantener un useState local solo para errores de inputs
+      console.error(err);
     } finally {
       setAccionando(null);
     }
@@ -110,11 +133,7 @@ export function PaginaCatalogo() {
   const handleEditarProducto = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!productoEditando) return;
-    const productoAnterior = productos.find(
-      (p) => p.id === productoEditando.id,
-    );
     if (
-      !productoAnterior ||
       !productoEditando.nombre.trim() ||
       productoEditando.precio <= 0 ||
       productoEditando.stock < 0
@@ -122,20 +141,12 @@ export function PaginaCatalogo() {
       return;
     setAccionando(productoEditando.id);
     try {
-      const productoActualizado = await productosService.update(
-        productoEditando.id,
-        productoEditando,
-      );
-      setProductos((prev) =>
-        prev.map((p) =>
-          p.id === productoEditando.id ? productoActualizado : p,
-        ),
-      );
+      setErrorLocal("");
+      await productosService.update(productoEditando.id, productoEditando);
+
+      recargar(); // recargamos actualizamos la lista llamando a useApi
     } catch (err) {
-      setProductos((prev) =>
-        prev.map((p) => (p.id === productoEditando.id ? productoAnterior : p)),
-      );
-      setError(obtenerMensajeError(err, "No se pudo editar el producto."));
+      setErrorLocal(obtenerMensajeError(err, "No se pudo editar el producto."));
     } finally {
       setAccionando(null);
       setProductoEditando(null);
@@ -143,14 +154,16 @@ export function PaginaCatalogo() {
   };
 
   const handleEliminar = async (id: number) => {
-    const productosAnteriores = productos;
-    setProductos((prev) => prev.filter((p) => p.id !== id));
     try {
       setAccionando(id);
+      setErrorLocal("");
       await productosService.delete(id);
+
+      recargar(); // recargamos actualizamos la lista llamando a useApi
     } catch (err) {
-      setProductos(productosAnteriores);
-      setError(obtenerMensajeError(err, "No se pudo eliminar el producto."));
+      setErrorLocal(
+        obtenerMensajeError(err, "No se pudo eliminar el producto."),
+      );
     } finally {
       setAccionando(null);
     }

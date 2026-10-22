@@ -1,3 +1,5 @@
+//para que nos va servir la este hook? Podemos eliminar todo el codigo repetitivo de carga errores y llamada http como tal
+
 import { useState, useEffect } from "react";
 
 interface UseApiResult<T> {
