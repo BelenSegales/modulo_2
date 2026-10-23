@@ -96,20 +96,83 @@
 .session-bar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+  gap: 24px;
   width: min(1080px, calc(100% - 32px));
   margin: 20px auto 0;
-  padding: 12px 16px;
+  padding: 14px 18px;
   color: #646074;
   background: white;
   border: 1px solid #e5e3ee;
-  border-radius: 10px;
+  border-radius: 14px;
   font-size: 0.82rem;
+  box-shadow: 0 8px 24px rgba(64, 58, 114, 0.06);
 }
 
-.session-bar small {
+.brand {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-mark {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  color: white;
+  background: #665bd0;
+  border-radius: 10px;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.brand-title {
+  color: #2e2b43;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.brand-subtitle {
+  margin-top: 2px;
   color: #8a869c;
+  font-size: 0.68rem;
+}
+
+.main-nav {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 6px;
+}
+
+.main-nav .button {
+  height: 38px;
+}
+
+.session-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-info {
+  display: grid;
+  gap: 2px;
+  text-align: right;
+}
+
+.user-info strong {
+  color: #403a72;
+  font-size: 0.78rem;
+}
+
+.user-info span {
+  color: #8a869c;
+  font-size: 0.72rem;
+  text-transform: capitalize;
 }
 
 .app-loading {
@@ -257,12 +320,17 @@ select:focus {
 }
 
 .button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   height: 42px;
   padding: 0 15px;
   border: 0;
   border-radius: 8px;
   font-size: 0.78rem;
   font-weight: 700;
+  text-decoration: none;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .primary {
@@ -272,6 +340,16 @@ select:focus {
 
 .primary:hover {
   background: #5549be;
+}
+
+.secondary {
+  color: #5c51bd;
+  background: #f0eeff;
+}
+
+.secondary:hover {
+  color: #403a72;
+  background: #e4e0ff;
 }
 
 .cards {
@@ -439,6 +517,27 @@ select:focus {
 }
 
 @media (max-width: 720px) {
+  .session-bar {
+    flex-wrap: wrap;
+    gap: 12px;
+    width: min(100% - 20px, 560px);
+  }
+
+  .main-nav {
+    order: 3;
+    flex-basis: 100%;
+    border-top: 1px solid #f0eef5;
+    padding-top: 12px;
+  }
+
+  .session-actions {
+    margin-left: auto;
+  }
+
+  .user-info {
+    display: none;
+  }
+
   .page {
     width: min(100% - 20px, 560px);
     padding-top: 20px;

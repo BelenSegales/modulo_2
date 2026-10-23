@@ -1,9 +1,9 @@
-import { use, useEffect, useState } from "react";
-import axios from "axios";
+import { useEffect } from "react";
 import { AuthPage } from "./componentes/AuthPage";
 import { PaginaCatalogo } from "./pages/PaginaCatalogo";
-import { authService } from "./services/auth";
 import { useAuthStore } from "./store/useAuthStore";
+import { PaginaReportes } from "./pages/PaginaReportes";
+import { Routes, Route, NavLink } from "react-router-dom";
 import "./App.css";
 
 function App() {
@@ -16,48 +16,82 @@ function App() {
   const logout = useAuthStore((s) => s.logout);
   const abrirAuth = useAuthStore((s) => s.abrirAuth);
   const cerrarAuth = useAuthStore((s) => s.cerrarAuth);
+  const esAdmin = useAuthStore((s) => s.esAdmin());
 
   useEffect(() => {
     void verificarSesion();
   }, [verificarSesion]);
 
-  if (verificandoSesion) {
-    return (
-      <>
-        <p className="empty app-loading">Verificando sesión...</p>
-        <PaginaCatalogo />
-      </>
-    );
-  }
-
   return (
     <>
       <header className="session-bar">
-        {autenticado ? (
-          <>
-            <span>
-              Sesión: <strong>{usuarioNombre || "Usuario"}</strong>
-              {usuarioRol && <small> ({usuarioRol})</small>}
-            </span>
-            <button type="button" className="button secondary" onClick={logout}>
-              Cerrar sesión
-            </button>
-          </>
-        ) : (
-          <>
-            <span>Catálogo público</span>
+        <div className="brand">
+          <div>
+            <p className="brand-title">Tienda Online</p>
+            <p className="brand-subtitle">Tienda de prodcutos varios</p>
+          </div>
+        </div>
+
+        <nav className="main-nav" aria-label="Navegación principal">
+          <NavLink
+            to="/"
+            className={({ isActive }) =>
+              `button ${isActive ? "primary" : "secondary"}`
+            }
+          >
+            Catálogo
+          </NavLink>
+
+          {esAdmin && (
+            <NavLink
+              to="/reportes"
+              className={({ isActive }) =>
+                `button ${isActive ? "primary" : "secondary"}`
+              }
+            >
+              Reportes
+            </NavLink>
+          )}
+        </nav>
+
+        <div className="session-actions">
+          {autenticado ? (
+            <>
+              <div className="user-info">
+                <strong>{usuarioNombre || "Usuario"}</strong>
+                <span>{usuarioRol || "Cliente"}</span>
+              </div>
+              <button
+                type="button"
+                className="button secondary"
+                onClick={logout}
+              >
+                Cerrar sesión
+              </button>
+            </>
+          ) : (
             <button
               type="button"
-              className="button secondary"
+              className="button primary"
               onClick={abrirAuth}
             >
               Iniciar sesión
             </button>
-          </>
-        )}
+          )}
+        </div>
       </header>
-      <PaginaCatalogo />
-      {mostrarAuth && !autenticado && <AuthPage onCancel={cerrarAuth} />}
+      {verificandoSesion ? (
+        <p className="empty app-loading">Verificando sesión...</p>
+      ) : (
+        <>
+          <Routes>
+            <Route path="/" element={<PaginaCatalogo />} />
+            {esAdmin && <Route path="/reportes" element={<PaginaReportes />} />}
+          </Routes>
+
+          {mostrarAuth && !autenticado && <AuthPage onCancel={cerrarAuth} />}
+        </>
+      )}
     </>
   );
 }

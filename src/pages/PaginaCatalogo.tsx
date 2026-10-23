@@ -9,6 +9,8 @@ import { useAuthStore } from "../store/useAuthStore"; // <-- no olviden importar
 import type { Producto } from "../types/producto";
 import { useDebounce } from "../hooks/useDebounce";
 import { useApi } from "../hooks/useApi";
+import { extraerMensaje } from "../lib/errorHandler";
+import { EncabezadoPagina } from "../componentes/EncabezadoPagina";
 
 const CATEGORIAS_BASE = ["Todas", "Electrónica", "Ropa", "Hogar"];
 type Orden = "recientes" | "nombre" | "stock";
@@ -54,6 +56,8 @@ export function PaginaCatalogo() {
   const [categoria, setCategoria] = useState("Todas");
   const [orden, setOrden] = useState<Orden>("recientes");
   const [nuevoNombre, setNuevoNombre] = useState("");
+  const [nuevoProducto, setNuevoProducto] = useState("");
+
   const [nuevaCategoria, setNuevaCategoria] = useState("Electrónica");
   const [nuevoPrecio, setNuevoPrecio] = useState("");
   const [nuevaDescripcion, setNuevaDescripcion] = useState("");
@@ -124,7 +128,7 @@ export function PaginaCatalogo() {
       setNuevaImagenUrl("");
     } catch (err) {
       // podemos mantener un useState local solo para errores de inputs
-      console.error(err);
+      setErrorLocal(extraerMensaje(error));
     } finally {
       setAccionando(null);
     }
@@ -176,10 +180,10 @@ export function PaginaCatalogo() {
 
   return (
     <main className="page">
-      <header className="hero">
-        <h1>Catálogo de productos</h1>
-        <p>Catálogo conectado a una API</p>
-      </header>
+      <EncabezadoPagina
+        titulo="Catálogo de productos"
+        descripcion="Catálogo conectado a una API"
+      />
 
       <section className="stats" aria-label="Resumen del catálogo">
         <div>

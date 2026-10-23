@@ -1,5 +1,6 @@
 import { api } from "../lib/axios";
 import type { CrearProductoDTO, Producto } from "../types/producto";
+import type { CrearDTO, ActualizarDTO } from "../types/dtos";
 
 interface ProductoApi {
   id: number;
@@ -50,7 +51,7 @@ export const productosService = {
     return respuesta.data.map(convertirProducto);
   },
 
-  create: async (datos: CrearProductoDTO) => {
+  /*create: async (datos: CrearProductoDTO) => {
     const respuesta = await api.post<ProductoApi>(
       "/products/",
       convertirDatos(datos),
@@ -67,6 +68,20 @@ export const productosService = {
 
     return convertirProducto(respuesta.data);
   },
-
+*/
   delete: (id: number) => api.delete(`/products/${id}`),
+
+  ////// uso de los DTOS
+
+  // crear producto
+  create: async (data: CrearDTO): Promise<Producto> => {
+    const response = await api.post<Producto>("/products", data);
+    return response.data;
+  },
+
+  // actualizar pproducto recibir el id y un actualizarDTo  (campos opcionales)
+  update: async (id: number, data: ActualizarDTO): Promise<Producto> => {
+    const response = await api.put<Producto>("/products/${id}", data);
+    return response.data;
+  },
 };
