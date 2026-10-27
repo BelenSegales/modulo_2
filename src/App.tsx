@@ -4,6 +4,10 @@ import { PaginaCatalogo } from "./pages/PaginaCatalogo";
 import { useAuthStore } from "./store/useAuthStore";
 import { PaginaReportes } from "./pages/PaginaReportes";
 import { Routes, Route, NavLink } from "react-router-dom";
+import { RutaProtegida } from "./componentes/RutaProtegida";
+import { PaginaNotFound } from "./pages/PaginaNotfound";
+import { PaginaSinAcceso } from "./pages/PaginaSinAcesso";
+
 import "./App.css";
 
 function App() {
@@ -85,8 +89,15 @@ function App() {
       ) : (
         <>
           <Routes>
+            {/* RUTA PUBLICA la que ve cualquiera*/}
             <Route path="/" element={<PaginaCatalogo />} />
-            {esAdmin && <Route path="/reportes" element={<PaginaReportes />} />}
+
+            <Route path="/sin-acceso" element={<PaginaSinAcceso />} />
+            <Route element={<RutaProtegida rolesPermitidos={["admin"]} />}>
+              <Route path="/reportes" element={<PaginaReportes />} />
+            </Route>
+
+            <Route path="*" element={<PaginaNotFound></PaginaNotFound>}></Route>
           </Routes>
 
           {mostrarAuth && !autenticado && <AuthPage onCancel={cerrarAuth} />}

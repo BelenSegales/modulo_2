@@ -37,6 +37,7 @@ export function PaginaCatalogo() {
   //  const [cargando, setCargando] = useState(true);
   //  const [error, setError] = useState("");
   const [accionando, setAccionando] = useState<number | null>(null);
+  const [categoria, setCategoria] = useState("Todas");
 
   const {
     data: productoData,
@@ -51,9 +52,8 @@ export function PaginaCatalogo() {
 
   //estados de la busqueda
   const [query, setQuery] = useState("");
-  const queryDebounced = useDebounce(query, 3000);
+  const queryDebounced = useDebounce(query, 500);
 
-  const [categoria, setCategoria] = useState("Todas");
   const [orden, setOrden] = useState<Orden>("recientes");
   const [nuevoNombre, setNuevoNombre] = useState("");
   const [nuevoProducto, setNuevoProducto] = useState("");
@@ -128,7 +128,7 @@ export function PaginaCatalogo() {
       setNuevaImagenUrl("");
     } catch (err) {
       // podemos mantener un useState local solo para errores de inputs
-      setErrorLocal(extraerMensaje(error));
+      setErrorLocal(extraerMensaje(err));
     } finally {
       setAccionando(null);
     }

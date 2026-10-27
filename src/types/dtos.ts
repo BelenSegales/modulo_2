@@ -5,6 +5,7 @@ interface Producto {
   precio: number;
   categoria: string;
   stock: number;
+  imagenUrl?: string | null;
 }
 
 // omit: crear un tipo copiando todo el producto excepto su id

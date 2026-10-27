@@ -1,5 +1,5 @@
 import { api } from "../lib/axios";
-import type { CrearProductoDTO, Producto } from "../types/producto";
+import type { Producto } from "../types/producto";
 import type { CrearDTO, ActualizarDTO } from "../types/dtos";
 
 interface ProductoApi {
@@ -18,7 +18,7 @@ interface ProductoApiUpdate {
   price?: number;
   stock?: number;
   description?: string;
-  image_url?: string;
+  image_url?: string | null;
 }
 
 const convertirProducto = (producto: ProductoApi): Producto => ({
@@ -31,9 +31,7 @@ const convertirProducto = (producto: ProductoApi): Producto => ({
   imagenUrl: producto.image_url,
 });
 
-const convertirDatos = (
-  datos: Partial<CrearProductoDTO>,
-): ProductoApiUpdate => ({
+const convertirDatos = (datos: ActualizarDTO): ProductoApiUpdate => ({
   ...(datos.nombre !== undefined && { name: datos.nombre }),
   ...(datos.categoria !== undefined && { category: datos.categoria }),
   ...(datos.precio !== undefined && { price: datos.precio }),
@@ -75,13 +73,19 @@ export const productosService = {
 
   // crear producto
   create: async (data: CrearDTO): Promise<Producto> => {
-    const response = await api.post<Producto>("/products", data);
-    return response.data;
+    const response = await api.post<ProductoApi>(
+      "/products/",
+      convertirDatos(data),
+    );
+    return convertirProducto(response.data);
   },
 
   // actualizar pproducto recibir el id y un actualizarDTo  (campos opcionales)
   update: async (id: number, data: ActualizarDTO): Promise<Producto> => {
-    const response = await api.put<Producto>("/products/${id}", data);
-    return response.data;
+    const response = await api.put<ProductoApi>(
+      `/products/${id}`,
+      convertirDatos(data),
+    );
+    return convertirProducto(response.data);
   },
 };

@@ -133,13 +133,14 @@ export function AuthPage({ onCancel }: AuthPageProps) {
               minLength={6}
               type="password"
               placeholder="Mínimo 6 caracteres"
+              value={password}
               onChange={(e) => setpasword(e.target.value)}
             />
           </label>
 
           {/* Mensajes de error o éxito */}
 
-          {error && <p className="feedback success">{mensaje}</p>}
+          {error && <p className="feedback error">{error}</p>}
           {mensaje && <p className="feedback success">{mensaje} </p>}
 
           <button className="button primary auth-submit" disabled={cargando}>
