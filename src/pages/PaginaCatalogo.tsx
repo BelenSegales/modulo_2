@@ -12,6 +12,7 @@ import { useApi } from "../hooks/useApi";
 import { extraerMensaje } from "../lib/errorHandler";
 import { EncabezadoPagina } from "../componentes/EncabezadoPagina";
 import { useTipoCambio } from "../hooks/useTipoCambio";
+import { useSearchParams } from "react-router-dom";
 
 const CATEGORIAS_BASE = ["Todas", "Electrónica", "Ropa", "Hogar"];
 type Orden = "recientes" | "nombre" | "stock";
@@ -43,16 +44,43 @@ export function PaginaCatalogo() {
   //console.log("Tipo de cambio", bsPorDolar);
   //console.log("Error tipo de cambio", errorTipoCambio);
 
-  const [categoria, setCategoria] = useState("Todas");
+  // const [categoria, setCategoria] = useState("Todas");
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  const pagina = Math.max(1, Number(searchParams.get("pagina")) || 1);
+  const categoria = searchParams.get("categoria") ?? "Todas";
+
+  // sin parametos  get(pagina)  null  Number(0)  = 1
+  // 3              "3"          3
+  // abcde          abcde        Nan                1
 
   const {
     data: productoData,
     cargando,
     error: errorApi,
     recargar,
-  } = useApi(() => productosService.getAll(categoria));
+  } = useApi(
+    () => productosService.getPagina(pagina, POR_PAGINA, categoria),
+    [pagina, categoria],
+  );
 
-  const productos = productoData ?? [];
+  const POR_PAGINA = 6;
+
+  // const productos = productoData ?? [];
+
+  const productos = productoData?.productos ?? [];
+  const hayMas = productoData?.hayMas ?? false;
+
+  // funciones para cambiar de pagina y categoria
+
+  const irAPagina = (nueva: number) => {
+    setSearchParams({ pagina: String(nueva), categoria });
+  };
+
+  const cambiarCategoria = (nueva: string) => {
+    setSearchParams({ pagina: "1", categoria: nueva });
+  };
+
   const [errorLocal, setErrorLocal] = useState("");
   const error = errorLocal || errorApi;
 
@@ -258,7 +286,7 @@ export function PaginaCatalogo() {
           categoria={categoria}
           orden={orden}
           onQueryChange={(e) => setQuery(e.target.value)}
-          onCategoriaChange={(e) => setCategoria(e.target.value)}
+          onCategoriaChange={(e) => cambiarCategoria(e.target.value)}
           onOrdenChange={(e) => setOrden(e.target.value as Orden)}
         />
 
@@ -297,6 +325,26 @@ export function PaginaCatalogo() {
           <p className="empty">No encontramos productos con esos filtros.</p>
         )}
       </section>
+
+      <div>
+        <button
+          type="button"
+          onClick={() => irAPagina(pagina - 1)}
+          className="button"
+          disabled={pagina <= 1 || cargando}
+        >
+          Anterior
+        </button>
+
+        <button
+          type="button"
+          onClick={() => irAPagina(pagina + 1)}
+          className="button"
+          disabled={!hayMas || cargando}
+        >
+          Siguiente
+        </button>
+      </div>
     </main>
   );
 }

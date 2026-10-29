@@ -9,7 +9,10 @@ interface UseApiResult<T> {
   recargar: () => void;
 }
 
-export function useApi<T>(fetchFn: () => Promise<T>): UseApiResult<T> {
+export function useApi<T>(
+  fetchFn: () => Promise<T>,
+  dependencias: unknown[] = [],
+): UseApiResult<T> {
   const [data, setData] = useState<T | null>(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -37,7 +40,7 @@ export function useApi<T>(fetchFn: () => Promise<T>): UseApiResult<T> {
     return () => {
       cancelado = true;
     };
-  }, [contador]);
+  }, [contador, ...dependencias]);
 
   return { data, cargando, error, recargar: () => setContador((c) => c + 1) };
 }

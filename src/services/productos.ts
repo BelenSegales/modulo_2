@@ -49,6 +49,26 @@ export const productosService = {
     return respuesta.data.map(convertirProducto);
   },
 
+  // get paginado
+
+  getPagina: async (pagina: number, porPagina: number, categoria: string) => {
+    const params: Record<string, string | number> = {
+      skip: (pagina - 1) * porPagina,
+      limit: porPagina + 1,
+    };
+    if (categoria !== "Todas") {
+      params.category = categoria;
+    }
+
+    const respuesta = await api.get<ProductoApi[]>("/products/", { params });
+    const productos = respuesta.data.map(convertirProducto);
+
+    return {
+      productos: productos.slice(0, porPagina),
+      hayMas: productos.length > porPagina,
+    };
+  },
+
   /*create: async (datos: CrearProductoDTO) => {
     const respuesta = await api.post<ProductoApi>(
       "/products/",
