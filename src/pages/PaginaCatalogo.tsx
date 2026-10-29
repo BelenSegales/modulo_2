@@ -40,8 +40,8 @@ export function PaginaCatalogo() {
   const [accionando, setAccionando] = useState<number | null>(null);
   const { bsPorDolar, error: errorTipoCambio } = useTipoCambio();
 
-  console.log("Tipo de cambio", bsPorDolar);
-  console.log("Error tipo de cambio", errorTipoCambio);
+  //console.log("Tipo de cambio", bsPorDolar);
+  //console.log("Error tipo de cambio", errorTipoCambio);
 
   const [categoria, setCategoria] = useState("Todas");
 
