@@ -11,6 +11,7 @@ import { useDebounce } from "../hooks/useDebounce";
 import { useApi } from "../hooks/useApi";
 import { extraerMensaje } from "../lib/errorHandler";
 import { EncabezadoPagina } from "../componentes/EncabezadoPagina";
+import { useTipoCambio } from "../hooks/useTipoCambio";
 
 const CATEGORIAS_BASE = ["Todas", "Electrónica", "Ropa", "Hogar"];
 type Orden = "recientes" | "nombre" | "stock";
@@ -37,6 +38,11 @@ export function PaginaCatalogo() {
   //  const [cargando, setCargando] = useState(true);
   //  const [error, setError] = useState("");
   const [accionando, setAccionando] = useState<number | null>(null);
+  const { bsPorDolar, error: errorTipoCambio } = useTipoCambio();
+
+  console.log("Tipo de cambio", bsPorDolar);
+  console.log("Error tipo de cambio", errorTipoCambio);
+
   const [categoria, setCategoria] = useState("Todas");
 
   const {
@@ -256,7 +262,16 @@ export function PaginaCatalogo() {
           onOrdenChange={(e) => setOrden(e.target.value as Orden)}
         />
 
-        {error && <p className="feedback error">{error}</p>}
+        {bsPorDolar === null && <p>Cargando el tipo de cambio...</p>}
+
+        {errorTipoCambio && (
+          <p className="feedback error">
+            Error al obtener el tipo de cambio, no se pudo obtener
+          </p>
+        )}
+
+        {error ?? <p className="feedback error">{error}</p>}
+
         {cargando ? (
           <p className="empty">Cargando productos...</p>
         ) : filtrados.length > 0 ? (
@@ -274,6 +289,7 @@ export function PaginaCatalogo() {
                 onEditar={() => setProductoEditando({ ...producto })}
                 onEliminar={() => void handleEliminar(producto.id)}
                 accionesDeshabilitadas={accionando === producto.id}
+                bsPorDolar={bsPorDolar}
               />
             ))}
           </div>

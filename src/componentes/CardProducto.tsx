@@ -12,6 +12,7 @@ interface CardProductoProps {
   onEditar: () => void;
   onEliminar: () => void;
   accionesDeshabilitadas?: boolean;
+  bsPorDolar: number | null;
 }
 
 export function CardProducto({
@@ -25,8 +26,10 @@ export function CardProducto({
   onEditar,
   onEliminar,
   accionesDeshabilitadas = false,
+  bsPorDolar,
 }: CardProductoProps) {
   const [imagenDisponible, setImagenDisponible] = useState(Boolean(imagenUrl));
+  const precioUsd = bsPorDolar ? precio / bsPorDolar : null;
 
   return (
     <article className={`card card-${categoria.toLowerCase()}`}>
@@ -50,7 +53,12 @@ export function CardProducto({
             <p className="label">Producto</p>
             <h3>{nombre}</h3>
           </div>
-          <strong>Bs {precio}</strong>
+          <div className="text-red-500">
+            <strong>Bs. {precio} </strong>
+            {precioUsd !== null && (
+              <small> =$ {precioUsd.toFixed(2)} USD </small>
+            )}
+          </div>
         </div>
 
         {descripcion && <p className="card-description">{descripcion}</p>}
