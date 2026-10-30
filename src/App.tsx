@@ -9,6 +9,7 @@ import { PaginaNotFound } from "./pages/PaginaNotfound";
 import { PaginaSinAcceso } from "./pages/PaginaSinAcesso";
 
 import "./App.css";
+import { ErrorBoundary } from "./componentes/ErrorBoundary";
 
 function App() {
   const autenticado = useAuthStore((s) => s.autenticado);
@@ -94,7 +95,14 @@ function App() {
 
             <Route path="/sin-acceso" element={<PaginaSinAcceso />} />
             <Route element={<RutaProtegida rolesPermitidos={["admin"]} />}>
-              <Route path="/reportes" element={<PaginaReportes />} />
+              <Route
+                path="/reportes"
+                element={
+                  <ErrorBoundary>
+                    <PaginaReportes />
+                  </ErrorBoundary>
+                }
+              />
             </Route>
 
             <Route path="*" element={<PaginaNotFound></PaginaNotFound>}></Route>

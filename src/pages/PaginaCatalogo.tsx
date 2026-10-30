@@ -13,6 +13,9 @@ import { extraerMensaje } from "../lib/errorHandler";
 import { EncabezadoPagina } from "../componentes/EncabezadoPagina";
 import { useTipoCambio } from "../hooks/useTipoCambio";
 import { useSearchParams } from "react-router-dom";
+import { AlertaBanner } from "../componentes/ui/AlertaBanner";
+import { EstadoVacio } from "../componentes/ui/EstadoVacio";
+import { SkelentonCardProducto } from "../componentes/ui/SkeletonCardProducto";
 
 const CATEGORIAS_BASE = ["Todas", "Electrónica", "Ropa", "Hogar"];
 type Orden = "recientes" | "nombre" | "stock";
@@ -292,6 +295,7 @@ export function PaginaCatalogo() {
 
         {bsPorDolar === null && <p>Cargando el tipo de cambio...</p>}
 
+        {/*
         {errorTipoCambio && (
           <p className="feedback error">
             Error al obtener el tipo de cambio, no se pudo obtener
@@ -300,8 +304,33 @@ export function PaginaCatalogo() {
 
         {error ?? <p className="feedback error">{error}</p>}
 
+
+        USO DEL COMPONENTE ALERTABANNER
+       */}
+
+        {errorTipoCambio && (
+          <AlertaBanner
+            tipo="advertencia"
+            titulo="Tipo de cambio no disponible"
+            mensaje="Los precios solo estan en Bolivianos"
+          ></AlertaBanner>
+        )}
+
+        {error && (
+          <AlertaBanner
+            tipo="error"
+            titulo="error"
+            mensaje={error}
+            onCerrar={errorLocal ? () => setErrorLocal("") : undefined}
+          ></AlertaBanner>
+        )}
+
         {cargando ? (
-          <p className="empty">Cargando productos...</p>
+          <div className="cards" aria-busy="true">
+            {Array.from({ length: POR_PAGINA }).map((_, i) => (
+              <SkelentonCardProducto key={i} />
+            ))}
+          </div>
         ) : filtrados.length > 0 ? (
           <div className="cards">
             {filtrados.map((producto) => (
@@ -322,7 +351,17 @@ export function PaginaCatalogo() {
             ))}
           </div>
         ) : (
-          <p className="empty">No encontramos productos con esos filtros.</p>
+          <EstadoVacio
+            titulo="No encontramos productos"
+            descripcion="Prueba con otra categoria"
+            accion={{
+              label: "Limpiar los filtros",
+              onClick: () => {
+                setQuery("");
+                cambiarCategoria("Todas");
+              },
+            }}
+          />
         )}
       </section>
 

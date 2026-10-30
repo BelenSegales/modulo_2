@@ -24,7 +24,8 @@ export function PaginaReportes() {
     }));
   }, [productos]);
 
-  if (cargando) return <p className="empty app-loading">Cargando reportes...</p>;
+  if (cargando)
+    return <p className="empty app-loading">Cargando reportes...</p>;
 
   return (
     <main className="page">
