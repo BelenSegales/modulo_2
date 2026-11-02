@@ -7,7 +7,6 @@ import { FormularioProducto } from "../componentes/FormularioProducto";
 import { productosService } from "../services/productos";
 import { useAuthStore } from "../store/useAuthStore"; // <-- no olviden importar el store !! ya no tenemos el service de auth
 import type { Producto } from "../types/producto";
-import { useDebounce } from "../hooks/useDebounce";
 import { useApi } from "../hooks/useApi";
 import { extraerMensaje } from "../lib/errorHandler";
 import { EncabezadoPagina } from "../componentes/EncabezadoPagina";
@@ -16,9 +15,7 @@ import { useSearchParams } from "react-router-dom";
 import { AlertaBanner } from "../componentes/ui/AlertaBanner";
 import { EstadoVacio } from "../componentes/ui/EstadoVacio";
 import { SkelentonCardProducto } from "../componentes/ui/SkeletonCardProducto";
-
-const CATEGORIAS_BASE = ["Todas", "Electrónica", "Ropa", "Hogar"];
-type Orden = "recientes" | "nombre" | "stock";
+import { useFiltrosCatalogo, type Orden } from "../hooks/useFiltrosCatalogo";
 
 const obtenerMensajeError = (error: unknown, mensajePorDefecto: string) => {
   if (axios.isAxiosError(error)) {
@@ -34,9 +31,6 @@ const obtenerMensajeError = (error: unknown, mensajePorDefecto: string) => {
 export function PaginaCatalogo() {
   // checamos si es admin directamente del store global (eliminamos a la prop esAdmin que teniamos antes)
   const esAdmin = useAuthStore((s) => s.esAdmin());
-
-  // estado local de productos y filtros
-  // aqui vamos hacer uso de USEAPI con el ejemplo de productos
 
   //  const [productos, setProductos] = useState<Producto[]>([]);
   //  const [cargando, setCargando] = useState(true);
@@ -86,12 +80,6 @@ export function PaginaCatalogo() {
 
   const [errorLocal, setErrorLocal] = useState("");
   const error = errorLocal || errorApi;
-
-  //estados de la busqueda
-  const [query, setQuery] = useState("");
-  const queryDebounced = useDebounce(query, 500);
-
-  const [orden, setOrden] = useState<Orden>("recientes");
   const [nuevoNombre, setNuevoNombre] = useState("");
   const [nuevoProducto, setNuevoProducto] = useState("");
 
@@ -119,21 +107,6 @@ export function PaginaCatalogo() {
     };
     void cargarProductos();
   }, []);*/
-
-  const filtrados = productos
-    .filter((producto) => {
-      const coincideNombre = producto.nombre
-        .toLowerCase()
-        .includes(queryDebounced.toLowerCase().trim()); // filtrando el valor con pausa
-      const coincideCategoria =
-        categoria === "Todas" || producto.categoria === categoria;
-      return coincideNombre && coincideCategoria;
-    })
-    .sort((a, b) => {
-      if (orden === "nombre") return a.nombre.localeCompare(b.nombre);
-      if (orden === "stock") return b.stock - a.stock;
-      return b.id - a.id;
-    });
 
   const productosDisponibles = productos.filter((p) => p.stock > 0).length;
   const stockTotal = productos.reduce((total, p) => total + p.stock, 0);
@@ -210,10 +183,7 @@ export function PaginaCatalogo() {
     }
   };
 
-  const categorias = [
-    ...CATEGORIAS_BASE,
-    ...Array.from(new Set(productos.map((p) => p.categoria).filter(Boolean))),
-  ].filter((opcion, indice, opciones) => opciones.indexOf(opcion) === indice);
+  const filtros = useFiltrosCatalogo(productos, categoria);
 
   return (
     <main className="page">
@@ -245,7 +215,7 @@ export function PaginaCatalogo() {
             </div>
           </div>
           <FormularioProducto
-            categorias={categorias}
+            categorias={filtros.categorias}
             nombre={nuevoNombre}
             categoria={nuevaCategoria}
             precio={nuevoPrecio}
@@ -279,18 +249,18 @@ export function PaginaCatalogo() {
             <h2 id="products-title">Tus productos</h2>
           </div>
           <p>
-            Mostrando {filtrados.length} de {productos.length}
+            Mostrando {filtros.filtrados.length} de {productos.length}
           </p>
         </div>
 
         <FiltrosCatalogo
-          categorias={categorias}
-          query={query}
+          categorias={filtros.categorias}
+          query={filtros.query}
           categoria={categoria}
-          orden={orden}
-          onQueryChange={(e) => setQuery(e.target.value)}
+          orden={filtros.orden}
+          onQueryChange={(e) => filtros.setQuery(e.target.value)}
           onCategoriaChange={(e) => cambiarCategoria(e.target.value)}
-          onOrdenChange={(e) => setOrden(e.target.value as Orden)}
+          onOrdenChange={(e) => filtros.setOrden(e.target.value as Orden)}
         />
 
         {bsPorDolar === null && <p>Cargando el tipo de cambio...</p>}
@@ -331,9 +301,9 @@ export function PaginaCatalogo() {
               <SkelentonCardProducto key={i} />
             ))}
           </div>
-        ) : filtrados.length > 0 ? (
+        ) : filtros.filtrados.length > 0 ? (
           <div className="cards">
-            {filtrados.map((producto) => (
+            {filtros.filtrados.map((producto) => (
               <CardProducto
                 key={producto.id}
                 nombre={producto.nombre}
@@ -357,7 +327,7 @@ export function PaginaCatalogo() {
             accion={{
               label: "Limpiar los filtros",
               onClick: () => {
-                setQuery("");
+                filtros.setQuery("");
                 cambiarCategoria("Todas");
               },
             }}
