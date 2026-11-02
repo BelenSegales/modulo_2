@@ -10,6 +10,7 @@ import { PaginaSinAcceso } from "./pages/PaginaSinAcesso";
 
 import "./App.css";
 import { ErrorBoundary } from "./componentes/ErrorBoundary";
+import { SelectorMoneda } from "./componentes/SelectorMoneda";
 
 function App() {
   const autenticado = useAuthStore((s) => s.autenticado);
@@ -60,6 +61,10 @@ function App() {
         </nav>
 
         <div className="session-actions">
+          <div>
+            <SelectorMoneda></SelectorMoneda>
+          </div>
+
           {autenticado ? (
             <>
               <div className="user-info">

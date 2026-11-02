@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { BadgeStock } from "./BadgeStock";
+import { useMoneda } from "../hooks/useMoneda";
 
 interface CardProductoProps {
   nombre: string;
@@ -12,7 +13,7 @@ interface CardProductoProps {
   onEditar: () => void;
   onEliminar: () => void;
   accionesDeshabilitadas?: boolean;
-  bsPorDolar: number | null;
+  // bsPorDolar: number | null;
 }
 
 export function CardProducto({
@@ -26,10 +27,13 @@ export function CardProducto({
   onEditar,
   onEliminar,
   accionesDeshabilitadas = false,
-  bsPorDolar,
 }: CardProductoProps) {
   const [imagenDisponible, setImagenDisponible] = useState(Boolean(imagenUrl));
+  const { bsPorDolar, moneda } = useMoneda();
+
   const precioUsd = bsPorDolar ? precio / bsPorDolar : null;
+
+  const mostrarUsd = moneda === "USD" && precioUsd !== null;
 
   return (
     <article className={`card card-${categoria.toLowerCase()}`}>
@@ -54,9 +58,18 @@ export function CardProducto({
             <h3>{nombre}</h3>
           </div>
           <div className="text-red-500">
-            <strong>Bs. {precio} </strong>
-            {precioUsd !== null && (
-              <small> =$ {precioUsd.toFixed(2)} USD </small>
+            {mostrarUsd ? (
+              <>
+                <strong>$ {precioUsd.toFixed(2)} USD </strong>
+                <small> = Bs. {precio} </small>
+              </>
+            ) : (
+              <>
+                <strong>Bs. {precio} </strong>
+                {precioUsd !== null && (
+                  <small> = $ {precioUsd.toFixed(2)} USD </small>
+                )}
+              </>
             )}
           </div>
         </div>

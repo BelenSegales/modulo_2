@@ -10,12 +10,14 @@ import type { Producto } from "../types/producto";
 import { useApi } from "../hooks/useApi";
 import { extraerMensaje } from "../lib/errorHandler";
 import { EncabezadoPagina } from "../componentes/EncabezadoPagina";
-import { useTipoCambio } from "../hooks/useTipoCambio";
 import { useSearchParams } from "react-router-dom";
 import { AlertaBanner } from "../componentes/ui/AlertaBanner";
 import { EstadoVacio } from "../componentes/ui/EstadoVacio";
 import { SkelentonCardProducto } from "../componentes/ui/SkeletonCardProducto";
 import { useFiltrosCatalogo, type Orden } from "../hooks/useFiltrosCatalogo";
+import { useFormularioProducto } from "../hooks/useFormularioProducto";
+
+import { useMoneda } from "../hooks/useMoneda";
 
 const obtenerMensajeError = (error: unknown, mensajePorDefecto: string) => {
   if (axios.isAxiosError(error)) {
@@ -36,7 +38,7 @@ export function PaginaCatalogo() {
   //  const [cargando, setCargando] = useState(true);
   //  const [error, setError] = useState("");
   const [accionando, setAccionando] = useState<number | null>(null);
-  const { bsPorDolar, error: errorTipoCambio } = useTipoCambio();
+  const { bsPorDolar, errorTipoCambio } = useMoneda();
 
   //console.log("Tipo de cambio", bsPorDolar);
   //console.log("Error tipo de cambio", errorTipoCambio);
@@ -80,13 +82,11 @@ export function PaginaCatalogo() {
 
   const [errorLocal, setErrorLocal] = useState("");
   const error = errorLocal || errorApi;
-  const [nuevoNombre, setNuevoNombre] = useState("");
+
   const [nuevoProducto, setNuevoProducto] = useState("");
 
-  const [nuevaCategoria, setNuevaCategoria] = useState("Electrónica");
-  const [nuevoPrecio, setNuevoPrecio] = useState("");
-  const [nuevaDescripcion, setNuevaDescripcion] = useState("");
-  const [nuevaImagenUrl, setNuevaImagenUrl] = useState("");
+  const form = useFormularioProducto();
+
   const [productoEditando, setProductoEditando] = useState<Producto | null>(
     null,
   );
@@ -113,31 +113,21 @@ export function PaginaCatalogo() {
 
   const handleAgregarProducto = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const precio = Number(nuevoPrecio);
-    if (!nuevoNombre.trim() || !Number.isFinite(precio) || precio <= 0) return;
+    const datos = form.obtenerDatos();
+    if (!datos) return;
+
     try {
       setAccionando(-1);
 
       // Creamos el producto en la API
-      await productosService.create({
-        nombre: nuevoNombre.trim(),
-        categoria: nuevaCategoria,
-        precio,
-        stock: 5,
-        descripcion: nuevaDescripcion.trim(),
-        imagenUrl: nuevaImagenUrl.trim(),
-      });
+      await productosService.create(datos);
 
       // llamamos a recargar()desde el useApi para actualizar la lista automáticamente
       recargar();
 
-      // lmpiamos el formulario
-      setNuevoNombre("");
-      setNuevoPrecio("");
-      setNuevaDescripcion("");
-      setNuevaImagenUrl("");
+      // limpiamos el formulario
+      form.reset();
     } catch (err) {
-      // podemos mantener un useState local solo para errores de inputs
       setErrorLocal(extraerMensaje(err));
     } finally {
       setAccionando(null);
@@ -216,18 +206,18 @@ export function PaginaCatalogo() {
           </div>
           <FormularioProducto
             categorias={filtros.categorias}
-            nombre={nuevoNombre}
-            categoria={nuevaCategoria}
-            precio={nuevoPrecio}
-            descripcion={nuevaDescripcion}
-            imagenUrl={nuevaImagenUrl}
+            nombre={form.nombre}
+            categoria={form.categoria}
+            precio={form.precio}
+            descripcion={form.descripcion}
+            imagenUrl={form.imagenUrl}
             cargando={accionando === -1}
             onSubmit={(e) => void handleAgregarProducto(e)}
-            onNombreChange={(e) => setNuevoNombre(e.target.value)}
-            onCategoriaChange={(e) => setNuevaCategoria(e.target.value)}
-            onPrecioChange={(e) => setNuevoPrecio(e.target.value)}
-            onDescripcionChange={(e) => setNuevaDescripcion(e.target.value)}
-            onImagenChange={(e) => setNuevaImagenUrl(e.target.value)}
+            onNombreChange={(e) => form.setNombre(e.target.value)}
+            onCategoriaChange={(e) => form.setCategoria(e.target.value)}
+            onPrecioChange={(e) => form.setPrecio(e.target.value)}
+            onDescripcionChange={(e) => form.setDescripcion(e.target.value)}
+            onImagenChange={(e) => form.setImagenUrl(e.target.value)}
           />
         </section>
       )}
@@ -316,7 +306,6 @@ export function PaginaCatalogo() {
                 onEditar={() => setProductoEditando({ ...producto })}
                 onEliminar={() => void handleEliminar(producto.id)}
                 accionesDeshabilitadas={accionando === producto.id}
-                bsPorDolar={bsPorDolar}
               />
             ))}
           </div>
